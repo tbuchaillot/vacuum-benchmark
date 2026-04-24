@@ -2,7 +2,10 @@
 // classifies the fork's drift.
 package contractdiff
 
-import "sort"
+import (
+	"sort"
+	"strconv"
+)
 
 type Snapshot struct {
 	Version  string             `json:"version"`
@@ -208,19 +211,7 @@ func typeEqual(a, b TypeInfo) bool {
 }
 
 func summarizeType(t TypeInfo) string {
-	return t.Kind + "(" + itoa(len(t.Fields)) + " fields)"
-}
-
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	var digits []byte
-	for n > 0 {
-		digits = append([]byte{byte('0' + n%10)}, digits...)
-		n /= 10
-	}
-	return string(digits)
+	return t.Kind + "(" + strconv.Itoa(len(t.Fields)) + " fields)"
 }
 
 func unionKeys[T any](a, b map[string]T) []string {
