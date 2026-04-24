@@ -3,7 +3,7 @@ package bench_test
 import (
 	"testing"
 
-	"github.com/daveshanley/vacuum/motor"
+	"github.com/buraksekili/vacuum/motor"
 
 	"vacuum-benchmark/internal/scenarios"
 )

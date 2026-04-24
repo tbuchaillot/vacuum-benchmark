@@ -3,7 +3,7 @@ module vacuum-benchmark/runners/fork
 go 1.25.0
 
 require (
-	github.com/daveshanley/vacuum v0.0.0
+	github.com/buraksekili/vacuum v0.0.0-20250713210200-b857c8f1f4b1
 	vacuum-benchmark/internal/scenarios v0.0.0-00010101000000-000000000000
 )
 
@@ -13,7 +13,6 @@ require (
 	atomicgo.dev/schedule v0.1.0 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
-	github.com/buraksekili/vacuum v0.0.0-20250713210200-b857c8f1f4b1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/console v1.0.5 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
@@ -46,7 +45,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/daveshanley/vacuum => github.com/buraksekili/vacuum v0.0.0-20250713210200-b857c8f1f4b1
 
 replace vacuum-benchmark/internal/scenarios => ../../internal/scenarios

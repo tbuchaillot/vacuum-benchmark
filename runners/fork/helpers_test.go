@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/daveshanley/vacuum/rulesets"
+	"github.com/buraksekili/vacuum/rulesets"
 )
 
 // repoRoot walks up from the current directory until it finds go.work.
