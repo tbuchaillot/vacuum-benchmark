@@ -2,6 +2,11 @@ module vacuum-benchmark/runners/fork
 
 go 1.25.0
 
+// This runner imports the fork directly (not via `replace github.com/daveshanley/vacuum
+// => github.com/buraksekili/vacuum`) because the fork renamed its own module path to
+// github.com/buraksekili/vacuum in its go.mod, and its internal packages self-import
+// under the new path. That makes the replace-based unification fail with
+// "used for two different module paths". See fix commit 0e23a11 for full context.
 require (
 	github.com/buraksekili/vacuum v0.0.0-20250713210200-b857c8f1f4b1
 	vacuum-benchmark/internal/scenarios v0.0.0-00010101000000-000000000000
