@@ -1,0 +1,19 @@
+extends: [[spectral:oas, all]]
+rules:
+  owasp-no-numeric-ids: true
+  owasp-no-http-basic: true
+  owasp-no-api-keys-in-url: true
+  owasp-no-credentials-in-url: true
+  owasp-auth-insecure-schemes: true
+  owasp-jwt-best-practices: true
+  owasp-protection-global-unsafe: true
+  owasp-protection-global-safe: true
+  owasp-define-error-validation: true
+  owasp-define-error-responses-401: true
+  owasp-define-error-responses-500: true
+  owasp-rate-limit: true
+  owasp-rate-limit-responses-429: true
+  owasp-array-limit: true
+  owasp-string-limit: true
+  owasp-integer-limit: true
+  owasp-no-additionalProperties: true
