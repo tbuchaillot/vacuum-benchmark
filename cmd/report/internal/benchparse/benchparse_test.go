@@ -49,3 +49,26 @@ func TestParseIgnoresNonBenchLines(t *testing.T) {
 		t.Fatalf("len(Parse) = %d, want 0", len(got))
 	}
 }
+
+// TestParseSkipsCorruptedBenchLines verifies that when a sub-benchmark
+// fails at runtime and a linter logs an error onto the same stdout line
+// as the bench header (observed in practice with vacuum + $ref resolution
+// failures), Parse skips the corrupted row without losing other clean
+// rows in the same input stream.
+func TestParseSkipsCorruptedBenchLines(t *testing.T) {
+	corrupted := `BenchmarkLint/small/minimal-8     1234    987654 ns/op    45.67 MB/s    34567 B/op    123 allocs/op
+BenchmarkLint/medium/recommended-15        ERROR unable to open the rolodex file
+BenchmarkLint/large/minimal-8     42      5678901 ns/op    2.34 MB/s    777777 B/op    9999 allocs/op
+`
+	got, err := Parse(strings.NewReader(corrupted))
+	if err != nil {
+		t.Fatalf("Parse returned err on corrupted input: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("len(Parse) = %d, want 2 (skip the corrupted middle line)", len(got))
+	}
+	if got[0].Size != "small" || got[1].Size != "large" {
+		t.Errorf("kept rows = %s/%s and %s/%s; want small and large",
+			got[0].Size, got[0].Ruleset, got[1].Size, got[1].Ruleset)
+	}
+}

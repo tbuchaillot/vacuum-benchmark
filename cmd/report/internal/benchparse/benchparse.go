@@ -34,7 +34,14 @@ func Parse(r io.Reader) ([]Result, error) {
 		}
 		res, err := parseLine(line)
 		if err != nil {
-			return nil, fmt.Errorf("parse %q: %w", line, err)
+			// Lines starting with BenchmarkLint/ can be corrupted by log
+			// output interleaved into go test's stdout (for example when a
+			// linter fails during a sub-benchmark and writes an error log
+			// onto the same line as the bench header). Skip such lines so
+			// that cleanly-produced results from other sub-benchmarks in
+			// the same run are not lost. The raw output is persisted by
+			// the orchestrator for post-mortem debugging.
+			continue
 		}
 		out = append(out, res)
 	}
