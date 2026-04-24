@@ -51,11 +51,15 @@ func main() {
 		fmt.Fprintf(os.Stderr, "create %s: %v\n", *outPath, err)
 		os.Exit(1)
 	}
-	defer f.Close()
 	enc := json.NewEncoder(f)
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(out); err != nil {
+		f.Close()
 		fmt.Fprintf(os.Stderr, "encode: %v\n", err)
+		os.Exit(1)
+	}
+	if err := f.Close(); err != nil {
+		fmt.Fprintf(os.Stderr, "close %s: %v\n", *outPath, err)
 		os.Exit(1)
 	}
 	fmt.Printf("wrote %s (%d packages)\n", *outPath, len(out.Packages))
