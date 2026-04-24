@@ -10,6 +10,10 @@ type Doer interface {
 	Do() error
 }
 
+type NamedInt int
+
+type StringAlias = string
+
 func ApplyThing(t *Thing) *Thing {
 	return t
 }

@@ -73,6 +73,32 @@ func TestExtractFixture(t *testing.T) {
 	if !foundDoer {
 		t.Error("type Doer not found")
 	}
+
+	foundNamed := false
+	for _, typ := range pkg.Types {
+		if typ.Name == "NamedInt" {
+			foundNamed = true
+			if typ.Kind != "named" {
+				t.Errorf("NamedInt kind = %q, want 'named'", typ.Kind)
+			}
+		}
+	}
+	if !foundNamed {
+		t.Error("type NamedInt not found")
+	}
+
+	foundAlias := false
+	for _, typ := range pkg.Types {
+		if typ.Name == "StringAlias" {
+			foundAlias = true
+			if typ.Kind != "alias" {
+				t.Errorf("StringAlias kind = %q, want 'alias'", typ.Kind)
+			}
+		}
+	}
+	if !foundAlias {
+		t.Error("type StringAlias not found")
+	}
 }
 
 func keys(m map[string]Package) []string {

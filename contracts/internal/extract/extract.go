@@ -37,7 +37,7 @@ type Function struct {
 
 type TypeInfo struct {
 	Name   string      `json:"name"`
-	Kind   string      `json:"kind"` // "struct", "interface", "named"
+	Kind   string      `json:"kind"` // "struct", "interface", "alias", "named"
 	Fields []FieldInfo `json:"fields,omitempty"`
 }
 
@@ -111,6 +111,18 @@ func extractPackage(pkg *packages.Package) Package {
 
 func extractType(tn *types.TypeName, pkg *packages.Package) TypeInfo {
 	info := TypeInfo{Name: tn.Name()}
+
+	// Aliases (type X = Y) must be distinguished from named types (type X Y)
+	// so the diff can surface an alias↔named conversion as drift.
+	if tn.IsAlias() {
+		info.Kind = "alias"
+		info.Fields = []FieldInfo{{
+			Name: "",
+			Type: types.TypeString(tn.Type(), relativeQualifier(pkg.PkgPath)),
+		}}
+		return info
+	}
+
 	underlying := tn.Type().Underlying()
 
 	switch u := underlying.(type) {
