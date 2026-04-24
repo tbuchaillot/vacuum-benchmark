@@ -80,7 +80,7 @@ func run() error {
 	// 5. Render.
 	meta := render.Meta{
 		GoVersion:     runtime.Version(),
-		CPU:           readCPU(),
+		CPU:           cpuFromBench(upstreamOut, forkOut),
 		Date:          time.Now().Format("2006-01-02"),
 		Count:         *count,
 		Upstream:      upstreamContract.Version,
@@ -203,12 +203,21 @@ func findRepoRoot() (string, error) {
 	}
 }
 
-func readCPU() string {
-	out, err := exec.Command("uname", "-m").Output()
-	if err != nil {
-		return runtime.GOARCH
+// cpuFromBench extracts the CPU model from either runner's bench output.
+// `go test -bench` emits a `cpu: <model>` header line (e.g. `cpu: Apple M5 Pro`);
+// that is the authoritative source here since we're running on the same
+// machine as the benchmarks. Falls back to runtime identifiers if both
+// runners failed to produce output (e.g., both BUILD_FAILED).
+func cpuFromBench(outputs ...[]byte) string {
+	for _, out := range outputs {
+		for _, line := range strings.Split(string(out), "\n") {
+			line = strings.TrimSpace(line)
+			if cpu, ok := strings.CutPrefix(line, "cpu: "); ok {
+				return cpu
+			}
+		}
 	}
-	return strings.TrimSpace(string(out)) + " " + runtime.GOOS
+	return runtime.GOARCH + " " + runtime.GOOS
 }
 
 func writeFile(path, content string) error {

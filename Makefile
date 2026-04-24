@@ -2,9 +2,22 @@
 
 COUNT ?= 5
 
-.PHONY: all fetch bench contracts clean tidy
+.PHONY: all fetch bench contracts clean tidy test
 
 all: fetch bench
+
+# Run unit tests across the project. Each sub-module is exercised in its
+# own directory. `contracts/` uses GOWORK=off so the testdata/fixture
+# nested-module in TestExtractFixture loads cleanly — workspace-aware
+# packages.Load confuses itself trying to resolve the nested go.mod.
+# Runners use GOWORK=off for the same reason they do elsewhere (they are
+# isolated islands; see go.work comment).
+test:
+	cd internal/scenarios && go test ./...
+	cd contracts          && GOWORK=off go test ./...
+	cd cmd/report         && go test ./...
+	cd runners/upstream   && GOWORK=off go test -run 'Test' ./...
+	cd runners/fork       && GOWORK=off go test -run 'Test' ./...
 
 fetch:
 	./scripts/fetch.sh

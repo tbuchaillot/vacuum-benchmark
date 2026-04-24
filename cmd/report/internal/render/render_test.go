@@ -59,6 +59,14 @@ func TestContractsMarkdownPackageRow(t *testing.T) {
 	}
 }
 
+func TestContractsSurfacesExtractionDegradation(t *testing.T) {
+	meta := Meta{Upstream: "upstream-v0.26.1", Fork: "fork-HEAD (extract failed)"}
+	got := Contracts(meta, contractdiff.Report{Verdict: contractdiff.VerdictBreaking})
+	if !strings.Contains(got, "⚠") {
+		t.Errorf("expected extraction-degraded warning; got:\n%s", got)
+	}
+}
+
 func TestResultsHandlesBuildFailure(t *testing.T) {
 	meta := Meta{UpstreamBuild: "OK", ForkBuild: "BUILD_FAILED: undefined motor.ApplyRulesToRuleSet"}
 	got := Results(meta, nil, nil)

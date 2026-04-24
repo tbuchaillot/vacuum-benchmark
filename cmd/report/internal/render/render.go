@@ -68,6 +68,13 @@ func Contracts(meta Meta, report contractdiff.Report) string {
 	fmt.Fprintf(&b, "# Vacuum Fork Contract Report\n\n")
 	fmt.Fprintf(&b, "- upstream: %s\n", meta.Upstream)
 	fmt.Fprintf(&b, "- fork:     %s\n\n", meta.Fork)
+
+	if extractionDegraded(meta) {
+		b.WriteString("> ⚠ Contract extraction did not complete cleanly for one or more runners (see version labels above). The parity table reflects whatever could be extracted; treat drift signals as lower-confidence.\n\n")
+	}
+
+	b.WriteString("The parity table keys packages by short name (e.g. `motor`), so upstream's `github.com/daveshanley/vacuum/motor` and fork's `github.com/buraksekili/vacuum/motor` are compared under the same row. The module-path rename itself is a consumer-visible change and factors into the `breaking-drift` verdict.\n\n")
+
 	fmt.Fprintf(&b, "Verdict: **%s**\n\n", report.Verdict)
 
 	switch report.Verdict {
@@ -87,6 +94,20 @@ func Contracts(meta Meta, report contractdiff.Report) string {
 			r.Package, r.Kind, r.Symbol, escapePipes(r.Upstream), escapePipes(r.Fork), r.Status)
 	}
 	return b.String()
+}
+
+// extractionDegraded reports whether the contracts extractor marked
+// either runner's snapshot as having failed. The orchestrator signals
+// this by appending a parenthetical suffix to the version label (e.g.,
+// "fork-... (extract failed)"); checking for that suffix keeps render
+// agnostic to the orchestrator's internals.
+func extractionDegraded(meta Meta) bool {
+	return strings.Contains(meta.Upstream, "(extract failed)") ||
+		strings.Contains(meta.Upstream, "(read failed)") ||
+		strings.Contains(meta.Upstream, "(unmarshal failed)") ||
+		strings.Contains(meta.Fork, "(extract failed)") ||
+		strings.Contains(meta.Fork, "(read failed)") ||
+		strings.Contains(meta.Fork, "(unmarshal failed)")
 }
 
 func rulesetsPresent(a, b []benchparse.Result) []string {
