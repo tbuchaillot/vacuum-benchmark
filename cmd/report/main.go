@@ -31,27 +31,37 @@ const (
 )
 
 func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+}
+
+// run holds the orchestrator body. It's separated from main so deferred
+// cleanups (temp binary, temp dir) actually execute on error paths —
+// os.Exit in main would skip them.
+func run() error {
 	count := flag.Int("count", 5, "go test -count")
 	flag.Parse()
 
 	repoRoot, err := findRepoRoot()
 	if err != nil {
-		die("find repo root: %v", err)
+		return fmt.Errorf("find repo root: %w", err)
 	}
 
 	rawDir := filepath.Join(repoRoot, "results", "raw")
 	if err := os.MkdirAll(rawDir, 0o755); err != nil {
-		die("mkdir results/raw: %v", err)
+		return fmt.Errorf("mkdir results/raw: %w", err)
 	}
 
 	// 1. Build the contracts binary once (from the workspace) so each
 	//    invocation against a runner can use it without requiring the
 	//    runner to be a workspace member.
-	contractsBin, err := buildContractsBinary(repoRoot)
+	contractsBin, cleanupBin, err := buildContractsBinary(repoRoot)
 	if err != nil {
-		die("build contracts binary: %v", err)
+		return fmt.Errorf("build contracts binary: %w", err)
 	}
-	defer os.Remove(contractsBin)
+	defer cleanupBin()
 
 	// 2. Run benchmarks for each runner. Capture output; note build failures.
 	upstreamOut, upstreamBuild := runBench(filepath.Join(repoRoot, "runners/upstream"), *count, filepath.Join(rawDir, "upstream.bench.txt"))
@@ -81,32 +91,39 @@ func main() {
 	resultsMD := render.Results(meta, upstreamResults, forkResults)
 	contractsMD := render.Contracts(meta, diffReport)
 
-	writeFile(filepath.Join(repoRoot, "results/results.md"), resultsMD)
-	writeFile(filepath.Join(repoRoot, "results/contracts.md"), contractsMD)
+	if err := writeFile(filepath.Join(repoRoot, "results/results.md"), resultsMD); err != nil {
+		return err
+	}
+	if err := writeFile(filepath.Join(repoRoot, "results/contracts.md"), contractsMD); err != nil {
+		return err
+	}
 
 	fmt.Println("wrote results/results.md and results/contracts.md")
+	return nil
 }
 
-// buildContractsBinary compiles the contracts CLI to a temp path.
-// The caller is responsible for os.Remove-ing the returned path.
-func buildContractsBinary(repoRoot string) (string, error) {
-	tmpFile, err := os.CreateTemp("", "vacuum-bench-contracts-*")
+// buildContractsBinary compiles the contracts CLI into a fresh temp
+// directory (0o700) and returns the executable path alongside a cleanup
+// func the caller defers. Using MkdirTemp + a fixed filename avoids the
+// TOCTOU window that CreateTemp+Remove+go-build would open in /tmp.
+func buildContractsBinary(repoRoot string) (string, func(), error) {
+	dir, err := os.MkdirTemp("", "vacuum-bench-contracts-")
 	if err != nil {
-		return "", fmt.Errorf("create temp: %w", err)
+		return "", nil, fmt.Errorf("mkdir temp: %w", err)
 	}
-	path := tmpFile.Name()
-	tmpFile.Close()
-	os.Remove(path)
+	cleanup := func() { os.RemoveAll(dir) }
 
+	path := filepath.Join(dir, "contracts")
 	cmd := exec.Command("go", "build", "-o", path, "./cmd/contracts")
 	cmd.Dir = filepath.Join(repoRoot, "contracts")
 	cmd.Env = append(os.Environ(), "GOWORK=off")
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("go build: %w\n%s", err, stderr.String())
+		cleanup()
+		return "", nil, fmt.Errorf("go build: %w\n%s", err, stderr.String())
 	}
-	return path, nil
+	return path, cleanup, nil
 }
 
 // runBench runs `go test -bench=BenchmarkLint -benchmem -run=^$ -count=N ./...`
@@ -157,11 +174,13 @@ func runContracts(bin, runnerDir, versionLabel, packagesCSV, outPath string) con
 
 	raw, err := os.ReadFile(outPath)
 	if err != nil {
-		die("read %s: %v", outPath, err)
+		fmt.Fprintf(os.Stderr, "contracts: read %s: %v\n", outPath, err)
+		return contractdiff.Snapshot{Version: versionLabel + " (read failed)", Packages: map[string]contractdiff.Package{}}
 	}
 	var snap contractdiff.Snapshot
 	if err := json.Unmarshal(raw, &snap); err != nil {
-		die("unmarshal %s: %v", outPath, err)
+		fmt.Fprintf(os.Stderr, "contracts: unmarshal %s: %v\n", outPath, err)
+		return contractdiff.Snapshot{Version: versionLabel + " (unmarshal failed)", Packages: map[string]contractdiff.Package{}}
 	}
 	return snap
 }
@@ -192,16 +211,12 @@ func readCPU() string {
 	return strings.TrimSpace(string(out)) + " " + runtime.GOOS
 }
 
-func writeFile(path, content string) {
+func writeFile(path, content string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		die("mkdir %s: %v", filepath.Dir(path), err)
+		return fmt.Errorf("mkdir %s: %w", filepath.Dir(path), err)
 	}
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
-		die("write %s: %v", path, err)
+		return fmt.Errorf("write %s: %w", path, err)
 	}
-}
-
-func die(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, format+"\n", args...)
-	os.Exit(1)
+	return nil
 }
