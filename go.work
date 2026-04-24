@@ -1,0 +1,9 @@
+go 1.22
+
+use (
+    ./internal/scenarios
+    ./runners/upstream
+    ./runners/fork
+    ./contracts
+    ./cmd/report
+)

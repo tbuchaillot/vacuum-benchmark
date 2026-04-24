@@ -1,0 +1,15 @@
+# Generated benchmark outputs
+/results/
+
+# Fetched OpenAPI specs (downloaded by `make fetch`)
+/testdata/openapis/*.yaml
+/testdata/openapis/*.json
+
+# Go build artifacts
+*.test
+*.out
+
+# Editor
+.DS_Store
+.idea/
+.vscode/
