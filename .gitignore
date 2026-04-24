@@ -9,6 +9,11 @@
 *.test
 *.out
 
+# Workspace sum file — regenerated automatically by any workspace-aware go
+# command. Not useful to commit since runners are intentionally outside the
+# workspace (see go.work comment).
+/go.work.sum
+
 # Editor
 .DS_Store
 .idea/
