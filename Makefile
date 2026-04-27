@@ -41,5 +41,9 @@ tidy:
 	cd contracts          && go mod tidy
 	cd cmd/report         && go mod tidy
 
+# Clean only blows away the scratch artefacts under results/raw/.
+# results/results.md and results/contracts.md are tracked snapshots
+# (linked from README); they're updated by `make bench`, not deleted by
+# clean. Use `git checkout results/` to revert them if needed.
 clean:
-	rm -rf results/
+	rm -rf results/raw/
