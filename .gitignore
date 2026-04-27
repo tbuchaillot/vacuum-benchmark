@@ -1,0 +1,20 @@
+# Generated benchmark outputs
+/results/
+
+# Fetched OpenAPI specs (downloaded by `make fetch`)
+/testdata/openapis/*.yaml
+/testdata/openapis/*.json
+
+# Go build artifacts
+*.test
+*.out
+
+# Workspace sum file — regenerated automatically by any workspace-aware go
+# command. Not useful to commit since runners are intentionally outside the
+# workspace (see go.work comment).
+/go.work.sum
+
+# Editor
+.DS_Store
+.idea/
+.vscode/
