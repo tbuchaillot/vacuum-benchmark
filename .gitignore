@@ -1,5 +1,10 @@
-# Generated benchmark outputs
-/results/
+# Generated benchmark outputs. The two top-level markdown reports are
+# committed (see results/results.md and results/contracts.md) so they're
+# linkable from the README; the raw bench/contract artefacts under raw/
+# stay local-only.
+/results/*
+!/results/results.md
+!/results/contracts.md
 
 # Fetched OpenAPI specs (downloaded by `make fetch`)
 /testdata/openapis/*.yaml

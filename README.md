@@ -11,7 +11,7 @@ Design and plan documents live under `docs/superpowers/`.
 
 ## TL;DR — findings on Apple M5 Pro
 
-*From a `make bench COUNT=2` run; signs are noisy at low counts but the pattern is consistent.*
+*From a `make bench COUNT=2` run; signs are noisy at low counts but the pattern is consistent. Full reports: [`results/results.md`](results/results.md) (per-ruleset perf tables) and [`results/contracts.md`](results/contracts.md) (API parity + verdict).*
 
 - **Verdict: `breaking-drift`.** The fork can't be swapped in via Go's `replace` directive; it renamed its own module path. Several `rulesets` and `model` symbols upstream callers may use are absent from the fork.
 - **Speed:** upstream wins on medium and large specs. Fork is +50–140% slower on large; on small with light rulesets fork is roughly +90% slower.
